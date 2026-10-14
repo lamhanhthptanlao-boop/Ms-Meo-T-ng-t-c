@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Quicksand", ui-sans-serif, system-ui, sans-serif;
+  --color-soft-pink: #FFB7CE;
+  --color-soft-mint: #B2F2BB;
+  --color-soft-yellow: #FFF3BF;
+  --color-warm-bg: #FFF9F5;
+}
+
+body {
+  background-color: var(--color-warm-bg);
+  font-family: var(--font-sans);
+  background-image: radial-gradient(#FFB7CE 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
+}
+
+.cute-card {
+  @apply bg-white rounded-[2.5rem] shadow-xl shadow-pink-50 border-2 border-pink-50;
+}
+
+.cute-button {
+  @apply transition-all active:scale-95 hover:scale-105;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-zinc-50 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-pink-200 rounded-full hover:bg-pink-300 transition-colors;
+}

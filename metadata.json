@@ -1,0 +1,5 @@
+{
+  "name": "Ms Mèo màu hồng",
+  "description": "Ứng dụng trắc nghiệm tương tác Ms Mèo với tông màu hồng dễ thương và âm nhạc vui nhộn.",
+  "requestFramePermissions": ["camera"]
+}
