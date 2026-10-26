@@ -52,7 +52,8 @@ import {
   Timer,
   Zap,
   Award,
-  Clock
+  Clock,
+  Type
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import mammoth from 'mammoth';
@@ -100,6 +101,7 @@ export interface AppSettings {
   // Visuals
   enableFireworks: boolean;
   floatingElements: boolean;
+  fontSizePreference?: 'large' | 'extralarge' | 'huge';
   // Timed Mode
   timePerQuestion: number;
 }
@@ -115,6 +117,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   sfxVolume: 80,
   enableFireworks: true,
   floatingElements: true,
+  fontSizePreference: 'extralarge',
   timePerQuestion: 15,
 };
 
@@ -835,6 +838,19 @@ export default function App() {
 
   const questions = questionSets.find(s => s.id === activeSetId)?.questions || DEFAULT_QUESTIONS;
   const currentQuestion = questions[currentQuestionIdx] || questions[0];
+
+  const cycleFontSize = () => {
+    setSettings(prev => {
+      const cur = prev.fontSizePreference || 'extralarge';
+      let next: 'large' | 'extralarge' | 'huge' = 'extralarge';
+      if (cur === 'large') next = 'extralarge';
+      else if (cur === 'extralarge') next = 'huge';
+      else next = 'large';
+      const updated: AppSettings = { ...prev, fontSizePreference: next };
+      localStorage.setItem('ms_meo_app_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Save gold medals count
   useEffect(() => {
@@ -2605,28 +2621,45 @@ export default function App() {
                 )}
 
                 <div className="cute-card p-6 md:p-8">
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="bg-pink-100 text-pink-500 text-xs font-black px-3 py-1 rounded-full uppercase">
-                      Câu {currentQuestionIdx + 1} / {questions.length}
+                  <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-pink-100 text-pink-600 text-xs font-black px-3.5 py-1.5 rounded-full uppercase shadow-2xs">
+                        Câu {currentQuestionIdx + 1} / {questions.length}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={cycleFontSize}
+                        title="Bấm để đổi cỡ chữ câu hỏi & đáp án (To vừa / Rất to / Cực to)"
+                        className="bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all shadow-2xs"
+                      >
+                        <Type size={14} />
+                        <span>Cỡ chữ: {settings.fontSizePreference === 'huge' ? 'Cực to (Chiếu bảng)' : settings.fontSizePreference === 'large' ? 'To vừa' : 'Rất to (XL)'}</span>
+                      </button>
                     </div>
-                    <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
+                    <span className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full border border-purple-100">
                       Cử chỉ: Giơ {currentQuestion.options.length} ngón tay tương ứng
                     </span>
                   </div>
 
-                  <h2 className="text-2xl md:text-3xl font-bold text-zinc-800 leading-tight mb-4">
+                  <h2 className={`font-black text-zinc-900 tracking-tight mb-4 transition-all ${
+                    settings.fontSizePreference === 'huge'
+                      ? 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight'
+                      : settings.fontSizePreference === 'large'
+                        ? 'text-2xl sm:text-3xl md:text-4xl leading-snug'
+                        : 'text-2xl sm:text-3xl md:text-[2.6rem] leading-snug md:leading-tight'
+                  }`}>
                     {currentQuestion.question}
                   </h2>
 
                   {currentQuestion.image && (
-                    <div className="w-full max-h-48 rounded-2xl overflow-hidden mb-4 border-4 border-white shadow-sm">
+                    <div className="w-full max-h-52 rounded-2xl overflow-hidden mb-4 border-4 border-white shadow-sm">
                       <img src={currentQuestion.image} className="w-full h-full object-contain bg-zinc-50" alt="Question" />
                     </div>
                   )}
                 </div>
 
                 {/* Options Grid (2 or 4 options) */}
-                <div className={`grid gap-3.5 ${currentQuestion.options.length === 4 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid gap-4 ${currentQuestion.options.length === 4 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                   {currentQuestion.options.map((opt, idx) => (
                     <motion.div 
                       key={idx} 
@@ -2635,16 +2668,16 @@ export default function App() {
                       animate={{ 
                         scale: selectedOption === idx ? [1.02, 1.04, 1.02] : 1,
                         backgroundColor: selectedOption === idx ? "#FFB7CE" : "#FFFFFF",
-                        color: selectedOption === idx ? "#FFFFFF" : "#52525b",
-                        boxShadow: selectedOption === idx ? "0 12px 25px -5px rgba(255, 183, 206, 0.45)" : "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
+                        color: selectedOption === idx ? "#FFFFFF" : "#18181b",
+                        boxShadow: selectedOption === idx ? "0 14px 28px -5px rgba(255, 183, 206, 0.45)" : "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
                       }} 
                       transition={{ 
                         scale: selectedOption === idx ? { repeat: Infinity, duration: 2, ease: "easeInOut" } : { type: "spring", stiffness: 300, damping: 20 },
                         backgroundColor: { duration: 0.2 },
                         color: { duration: 0.2 }
                       }}
-                      className={`p-4 md:p-5 rounded-[2rem] font-bold text-base md:text-lg flex justify-between items-center border-2 transition-all cursor-pointer relative overflow-hidden ${
-                        selectedOption === idx ? 'border-pink-200' : 'border-pink-50'
+                      className={`p-4 sm:p-5 md:p-6 rounded-[2.2rem] min-h-[84px] md:min-h-[98px] flex justify-between items-center border-2 transition-all cursor-pointer relative overflow-hidden ${
+                        selectedOption === idx ? 'border-pink-300 ring-2 ring-pink-200' : 'border-pink-100 hover:border-pink-200'
                       }`}
                       onClick={() => setSelectedOption(idx)}
                     >
@@ -2656,17 +2689,28 @@ export default function App() {
                         />
                       )}
 
-                      <div className="flex items-center gap-3 relative z-10">
-                        <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0 ${
-                          selectedOption === idx ? 'bg-white text-pink-400' : 'bg-pink-50 text-pink-500'
+                      <div className="flex items-center gap-3.5 sm:gap-4 relative z-10 w-full pr-2">
+                        <span className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-xl sm:text-2xl md:text-3xl font-black shrink-0 shadow-xs ${
+                          selectedOption === idx ? 'bg-white text-pink-500 shadow-sm' : 'bg-pink-100 text-pink-600'
                         }`}>
                           {OPTION_LETTERS[idx]}
                         </span>
-                        <div>
-                          <div className="text-[10px] font-black uppercase text-pink-600/80 mb-0.5">
-                            {FINGER_ICONS[idx]} {idx + 1} ngón tay
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-black uppercase tracking-wider mb-1 flex items-center gap-1.5 ${
+                            selectedOption === idx ? 'text-white/95' : 'text-pink-600/90'
+                          } text-xs sm:text-sm`}>
+                            <span className="text-sm sm:text-base">{FINGER_ICONS[idx]}</span>
+                            <span>{idx + 1} ngón tay</span>
                           </div>
-                          <span>{opt}</span>
+                          <span className={`block font-black leading-snug break-words ${
+                            settings.fontSizePreference === 'huge'
+                              ? 'text-2xl sm:text-3xl md:text-4xl'
+                              : settings.fontSizePreference === 'large'
+                                ? 'text-lg sm:text-xl md:text-2xl'
+                                : 'text-xl sm:text-2xl md:text-3xl'
+                          }`}>
+                            {opt}
+                          </span>
                         </div>
                       </div>
 
@@ -2675,9 +2719,9 @@ export default function App() {
                           layoutId="cute-cursor" 
                           animate={{ rotate: [0, 15, -15, 0] }}
                           transition={{ repeat: Infinity, duration: 1.5 }}
-                          className="bg-white p-1 rounded-full text-soft-pink shadow-sm relative z-10"
+                          className="bg-white p-1.5 rounded-full text-pink-400 shadow-sm relative z-10 shrink-0 ml-2"
                         >
-                          <Heart size={16} fill="currentColor" />
+                          <Heart size={18} fill="currentColor" />
                         </motion.div>
                       )}
                     </motion.div>
@@ -2732,12 +2776,12 @@ export default function App() {
                       <Sparkles size={24} className="text-yellow-400 animate-spin" />
                     </div>
 
-                    <p className="text-green-700 font-bold text-base mb-1">
+                    <p className="text-green-700 font-extrabold text-lg md:text-xl mb-1">
                       Ms Mèo rất vui vì bạn đã trả lời chính xác!
                     </p>
                     
                     {currentQuestion.explanation && (
-                      <p className="text-xs text-green-600 bg-white/70 px-4 py-2 rounded-xl mt-2 max-w-md">
+                      <p className="text-sm md:text-base text-green-800 bg-white/80 px-5 py-2.5 rounded-2xl mt-3 max-w-lg font-semibold shadow-2xs border border-green-100">
                         💡 {currentQuestion.explanation}
                       </p>
                     )}
@@ -2758,14 +2802,15 @@ export default function App() {
                     </motion.div>
 
                     <h2 className="text-3xl md:text-4xl font-black text-rose-500 mb-2">Chưa chính xác rồi! 🥺</h2>
-                    <p className="text-rose-700 font-bold mb-1">Cố gắng ở câu sau nhé!</p>
-                    <p className="text-zinc-600 font-medium text-sm">
-                      Đáp án đúng là: <span className="underline font-bold text-green-600">
+                    <p className="text-rose-700 font-bold text-base md:text-lg mb-2">Cố gắng ở câu sau nhé!</p>
+                    <div className="bg-white/90 border-2 border-green-200 px-6 py-3.5 rounded-2xl shadow-sm mb-2">
+                      <span className="text-zinc-600 font-bold text-sm block mb-1">Đáp án đúng chính xác là:</span>
+                      <span className="text-xl md:text-2xl font-black text-green-600">
                         {OPTION_LETTERS[currentQuestion.correctIndex]}. {currentQuestion.options[currentQuestion.correctIndex]}
                       </span>
-                    </p>
+                    </div>
                     {currentQuestion.explanation && (
-                      <p className="text-xs text-rose-600 bg-white/70 px-4 py-2 rounded-xl mt-2 max-w-md">
+                      <p className="text-sm md:text-base text-zinc-700 bg-white/80 px-5 py-2.5 rounded-2xl mt-2 max-w-lg font-semibold shadow-2xs border border-pink-100">
                         💡 {currentQuestion.explanation}
                       </p>
                     )}
@@ -2799,19 +2844,34 @@ export default function App() {
                 {practiceViewMode === 'card' ? (
                   <>
                     <div className="cute-card p-6 md:p-8">
-                      <div className="flex items-center justify-between gap-2 mb-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <div className="flex items-center gap-2">
-                          <span className="bg-pink-100 text-pink-600 text-xs font-black px-3 py-1 rounded-full uppercase">
+                          <span className="bg-pink-100 text-pink-600 text-xs font-black px-3.5 py-1.5 rounded-full uppercase shadow-2xs">
                             Câu {currentQuestionIdx + 1} / {questions.length}
                           </span>
-                          <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                          <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 border border-emerald-200">
                             <GraduationCap size={14} /> Ôn tập
                           </span>
+                          <button
+                            type="button"
+                            onClick={cycleFontSize}
+                            title="Bấm để đổi cỡ chữ câu hỏi & đáp án (To vừa / Rất to / Cực to)"
+                            className="bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all shadow-2xs"
+                          >
+                            <Type size={14} />
+                            <span>Cỡ chữ: {settings.fontSizePreference === 'huge' ? 'Cực to (Chiếu bảng)' : settings.fontSizePreference === 'large' ? 'To vừa' : 'Rất to (XL)'}</span>
+                          </button>
                         </div>
                         <span className="text-xs text-zinc-400 font-bold hidden sm:inline">Không tính điểm</span>
                       </div>
 
-                      <h2 className="text-2xl md:text-3xl font-bold text-zinc-800 leading-tight mb-4">
+                      <h2 className={`font-black text-zinc-900 tracking-tight mb-4 transition-all ${
+                        settings.fontSizePreference === 'huge'
+                          ? 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight'
+                          : settings.fontSizePreference === 'large'
+                            ? 'text-2xl sm:text-3xl md:text-4xl leading-snug'
+                            : 'text-2xl sm:text-3xl md:text-[2.6rem] leading-snug md:leading-tight'
+                      }`}>
                         {currentQuestion.question}
                       </h2>
 
@@ -2835,25 +2895,25 @@ export default function App() {
                       )}
 
                       {/* Options */}
-                      <div className={`grid gap-3.5 ${currentQuestion.options.length === 4 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                      <div className={`grid gap-4 ${currentQuestion.options.length === 4 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                         {currentQuestion.options.map((opt, idx) => {
                           const isCorrect = idx === currentQuestion.correctIndex;
                           const isSelected = practiceSelectedOption === idx;
 
-                          let containerStyle = "p-4 rounded-[2rem] font-bold text-base flex items-center justify-between border-2 transition-all ";
+                          let containerStyle = "p-4 sm:p-5 md:p-6 rounded-[2.2rem] min-h-[82px] md:min-h-[96px] font-bold flex items-center justify-between border-2 transition-all cursor-pointer ";
 
                           if (practiceAlwaysShowAnswer) {
                             if (isCorrect) {
-                              containerStyle += "bg-emerald-50/80 border-emerald-300 text-emerald-800 shadow-md shadow-emerald-50";
+                              containerStyle += "bg-emerald-50/90 border-emerald-400 text-emerald-900 shadow-md shadow-emerald-50 ring-2 ring-emerald-200";
                             } else {
-                              containerStyle += "bg-white border-zinc-100 text-zinc-600 hover:bg-zinc-50/50";
+                              containerStyle += "bg-white border-zinc-100 text-zinc-700 hover:bg-zinc-50/50";
                             }
                           } else {
                             if (isSelected) {
                               if (isCorrect) {
-                                containerStyle += "bg-emerald-50 border-emerald-400 text-emerald-800 shadow-md shadow-emerald-100";
+                                containerStyle += "bg-emerald-50 border-emerald-400 text-emerald-900 shadow-md shadow-emerald-100 ring-2 ring-emerald-200";
                               } else {
-                                containerStyle += "bg-rose-50 border-rose-300 text-rose-700 shadow-md shadow-rose-100";
+                                containerStyle += "bg-rose-50 border-rose-300 text-rose-800 shadow-md shadow-rose-100";
                               }
                             } else {
                               containerStyle += "bg-white border-pink-50 hover:border-pink-200 text-zinc-700 cursor-pointer shadow-xs";
@@ -2870,39 +2930,45 @@ export default function App() {
                               }}
                               className={containerStyle}
                             >
-                              <div className="flex items-center gap-3">
-                                <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0 ${
+                              <div className="flex items-center gap-3.5 sm:gap-4 relative z-10 w-full pr-2">
+                                <span className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black shrink-0 shadow-xs ${
                                   (practiceAlwaysShowAnswer && isCorrect) || (isSelected && isCorrect)
                                     ? 'bg-emerald-500 text-white shadow-xs'
                                     : isSelected && !isCorrect
                                       ? 'bg-rose-400 text-white shadow-xs'
-                                      : 'bg-zinc-100 text-zinc-600'
+                                      : 'bg-zinc-100 text-zinc-700'
                                 }`}>
                                   {OPTION_LETTERS[idx]}
                                 </span>
-                                <div>
-                                  <div className="text-[10px] text-zinc-400 font-bold">
-                                    {FINGER_ICONS[idx]} {idx + 1} ngón
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs sm:text-sm text-zinc-400 font-bold mb-1 flex items-center gap-1">
+                                    <span>{FINGER_ICONS[idx]}</span>
+                                    <span>{idx + 1} ngón</span>
                                   </div>
-                                  <span className="font-bold">
+                                  <span className={`font-black leading-snug block break-words ${
+                                    settings.fontSizePreference === 'huge'
+                                      ? 'text-2xl sm:text-3xl md:text-4xl'
+                                      : settings.fontSizePreference === 'large'
+                                        ? 'text-lg sm:text-xl md:text-2xl'
+                                        : 'text-xl sm:text-2xl md:text-3xl'
+                                  }`}>
                                     {isCorrect && practiceAlwaysShowAnswer ? `# ${opt}` : opt}
                                   </span>
                                 </div>
                               </div>
-
-                              <div className="shrink-0">
+                              <div className="shrink-0 ml-2">
                                 {practiceAlwaysShowAnswer && isCorrect && (
-                                  <span className="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-black flex items-center gap-1 shadow-2xs">
-                                    <Check size={12} /> Đúng
+                                  <span className="bg-emerald-200 text-emerald-900 text-xs sm:text-sm px-3 py-1 rounded-full font-black flex items-center gap-1 shadow-2xs">
+                                    <Check size={14} /> Đúng
                                   </span>
                                 )}
                                 {!practiceAlwaysShowAnswer && isSelected && (
                                   isCorrect ? (
-                                    <span className="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-black flex items-center gap-1 shadow-2xs">
-                                      <Check size={12} /> Đúng! 🌟
+                                    <span className="bg-emerald-200 text-emerald-900 text-xs sm:text-sm px-3 py-1 rounded-full font-black flex items-center gap-1 shadow-2xs">
+                                      <Check size={14} /> Đúng! 🌟
                                     </span>
                                   ) : (
-                                    <span className="bg-rose-100 text-rose-700 text-xs px-2.5 py-1 rounded-full font-black flex items-center gap-1 shadow-2xs">
+                                    <span className="bg-rose-100 text-rose-700 text-xs sm:text-sm px-3 py-1 rounded-full font-black flex items-center gap-1 shadow-2xs">
                                       Sai 🥺
                                     </span>
                                   )
@@ -2981,36 +3047,36 @@ export default function App() {
 
                     <div className="space-y-4">
                       {questions.map((q, qIndex) => (
-                        <div key={q.id || qIndex} className="p-4 bg-zinc-50/80 rounded-2xl border border-zinc-100">
-                          <div className="flex items-start gap-2 mb-2">
-                            <span className="bg-pink-400 text-white text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 mt-0.5">
+                        <div key={q.id || qIndex} className="p-4 sm:p-5 bg-zinc-50/80 rounded-2xl border border-zinc-100">
+                          <div className="flex items-start gap-2.5 mb-2.5">
+                            <span className="bg-pink-400 text-white text-xs font-black px-2.5 py-1 rounded-full shrink-0 mt-0.5 shadow-2xs">
                               Câu {qIndex + 1}
                             </span>
-                            <span className="text-sm font-bold text-zinc-800 leading-snug">{q.question}</span>
+                            <span className="text-base sm:text-lg md:text-xl font-black text-zinc-900 leading-snug">{q.question}</span>
                           </div>
 
                           {q.image && (
-                            <img src={q.image} alt="" className="w-24 h-24 object-contain rounded-xl my-2 border border-pink-100 bg-white" />
+                            <img src={q.image} alt="" className="w-28 h-28 object-contain rounded-xl my-2 border border-pink-100 bg-white" />
                           )}
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
                             {q.options.map((opt, optIdx) => {
                               const isCorrect = optIdx === q.correctIndex;
                               return (
                                 <div
                                   key={optIdx}
-                                  className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-between border ${
+                                  className={`p-3 sm:p-3.5 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-between border transition-all ${
                                     isCorrect 
-                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-2xs' 
-                                      : 'bg-white border-zinc-100 text-zinc-500'
+                                       ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs font-extrabold' 
+                                       : 'bg-white border-zinc-100 text-zinc-700'
                                   }`}
                                 >
                                   <span>
                                     {OPTION_LETTERS[optIdx]}. {isCorrect ? `# ${opt}` : opt}
                                   </span>
                                   {isCorrect && (
-                                    <span className="bg-emerald-200/80 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-black flex items-center gap-0.5">
-                                      <Check size={12} /> Đúng
+                                    <span className="bg-emerald-200/90 text-emerald-900 text-xs px-2.5 py-1 rounded-full font-black flex items-center gap-1 shadow-2xs shrink-0 ml-2">
+                                      <Check size={14} /> Đúng
                                     </span>
                                   )}
                                 </div>
@@ -3841,6 +3907,69 @@ export default function App() {
               {/* VISUAL TAB */}
               {settingsTab === 'visual' && (
                 <div className="space-y-4">
+                  {/* Font Size Option */}
+                  <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div>
+                        <div className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
+                          <Type size={14} className="text-purple-500" />
+                          Cỡ chữ câu hỏi & đáp án
+                        </div>
+                        <div className="text-[11px] text-zinc-400">Tùy chỉnh độ lớn chữ để dễ nhìn khi đứng xa camera hoặc chiếu bảng</div>
+                      </div>
+                      <span className="text-xs font-black text-pink-600 bg-pink-50 px-2 py-0.5 rounded-lg border border-pink-100">
+                        {settings.fontSizePreference === 'huge' ? 'Cực to (Chiếu bảng)' : settings.fontSizePreference === 'large' ? 'To vừa' : 'Rất to (XL)'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated: AppSettings = { ...settings, fontSizePreference: 'large' };
+                          setSettings(updated);
+                          localStorage.setItem('ms_meo_app_settings', JSON.stringify(updated));
+                        }}
+                        className={`py-2 px-1 rounded-xl text-xs font-bold transition-all ${
+                          settings.fontSizePreference === 'large'
+                            ? 'bg-pink-400 text-white shadow-xs'
+                            : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
+                        }`}
+                      >
+                        To vừa (L)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated: AppSettings = { ...settings, fontSizePreference: 'extralarge' };
+                          setSettings(updated);
+                          localStorage.setItem('ms_meo_app_settings', JSON.stringify(updated));
+                        }}
+                        className={`py-2 px-1 rounded-xl text-xs font-bold transition-all ${
+                          (settings.fontSizePreference === 'extralarge' || !settings.fontSizePreference)
+                            ? 'bg-pink-400 text-white shadow-xs'
+                            : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
+                        }`}
+                      >
+                        Rất to (XL) ⭐
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated: AppSettings = { ...settings, fontSizePreference: 'huge' };
+                          setSettings(updated);
+                          localStorage.setItem('ms_meo_app_settings', JSON.stringify(updated));
+                        }}
+                        className={`py-2 px-1 rounded-xl text-xs font-bold transition-all ${
+                          settings.fontSizePreference === 'huge'
+                            ? 'bg-pink-400 text-white shadow-xs'
+                            : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
+                        }`}
+                      >
+                        Cực to (Chiếu bảng)
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100">
                     <div>
                       <div className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
